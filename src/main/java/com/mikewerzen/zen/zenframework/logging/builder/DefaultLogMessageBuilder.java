@@ -39,7 +39,6 @@ import com.mikewerzen.zen.zenframework.rest.response.ZenErrorResponse;
 import com.mikewerzen.zen.zenframework.security.context.SecurityContext;
 import com.mikewerzen.zen.zenframework.security.context.SecurityContextHolder;
 import com.mikewerzen.zen.zenframework.security.provider.zen.jwt.token.JWTToken;
-import com.mikewerzen.zen.zenframework.security.provider.zen.jwt.token.JWTTokenType;
 import com.mikewerzen.zen.zenframework.transaction.context.TransactionContext;
 import com.mikewerzen.zen.zenframework.transaction.context.TransactionContextHolder;
 import org.apache.logging.log4j.LogManager;
@@ -164,12 +163,9 @@ public class DefaultLogMessageBuilder implements LogMessageBuilder
 		if(securityContext.getSecurityToken() instanceof JWTToken)
 		{
 			JWTToken token = (JWTToken) securityContext.getSecurityToken();
-			addIfNotNull(auth, "jwtTokenType", token.getTokenType());
-			if(token.getTokenType().equals(JWTTokenType.AUTHORIZATION))
-			{
-				addSecurityRoles(user, securityContext);
-				addSecurityEvents(user, securityContext);
-			}
+			addSecurityRoles(user, securityContext);
+			addSecurityEvents(user, securityContext);
+
 		}
 
 		logMessage.add("security", security);

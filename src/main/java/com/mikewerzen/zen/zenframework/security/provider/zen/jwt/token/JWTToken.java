@@ -33,7 +33,6 @@ public class JWTToken implements SecurityToken
 {
 	private TokenService tokenService;
 
-	private JWTTokenType tokenType;
 	private String appName;
 	private String userId;
 	private String username;
@@ -44,21 +43,8 @@ public class JWTToken implements SecurityToken
 	private String rawTokenText;
 
 	public JWTToken(TokenService tokenService, String appName, String userId, String username,
-			String tokenId, String rawTokenText)
-	{
-		this.tokenType = JWTTokenType.IDENTITY;
-		this.tokenService = tokenService;
-		this.appName = appName;
-		this.userId = userId;
-		this.username = username;
-		this.tokenId = tokenId;
-		this.rawTokenText = rawTokenText;
-	}
-
-	public JWTToken(TokenService tokenService, String appName, String userId, String username,
 			String[] roles, String[] events, String tokenId, String rawTokenText)
 	{
-		this.tokenType = JWTTokenType.AUTHORIZATION;
 		this.tokenService = tokenService;
 		this.appName = appName;
 		this.userId = userId;
@@ -69,12 +55,6 @@ public class JWTToken implements SecurityToken
 		this.rawTokenText = rawTokenText;
 	}
 
-	public static JWTToken createIdentityToken(TokenService tokenService, String appName, String userId,
-			String username, String tokenId, String rawTokenText)
-	{
-		return new JWTToken(tokenService, appName, userId, username, tokenId, rawTokenText);
-	}
-
 	public static JWTToken createAuthorizationToken(TokenService tokenService, String appName, String userId,
 			String username, String[] roles,
 			String[] events, String tokenId, String rawTokenText)
@@ -82,13 +62,11 @@ public class JWTToken implements SecurityToken
 		return new JWTToken(tokenService, appName, userId, username, roles, events, tokenId, rawTokenText);
 	}
 
-	public static JWTToken createToken(TokenService tokenService, JWTTokenType tokenType, String appName, String
+	public static JWTToken createToken(TokenService tokenService, String appName, String
 			userId,
 			String username,
 			String[] roles, String[] events, String tokenId, String rawTokenText)
 	{
-		if (JWTTokenType.AUTHORIZATION.equals(tokenType))
-		{
 			return createAuthorizationToken(tokenService,
 					appName,
 					userId,
@@ -97,31 +75,7 @@ public class JWTToken implements SecurityToken
 					events,
 					tokenId,
 					rawTokenText);
-		}
-		else if (JWTTokenType.IDENTITY.equals(tokenType))
-		{
-			return createIdentityToken(tokenService, appName, userId, username, tokenId, rawTokenText);
-		}
-
-		throw new InternalException("Cannot create a JWTTokenType of type: " + tokenType);
 	}
-
-
-	public JWTTokenType getTokenType()
-	{
-		return tokenType;
-	}
-
-	public boolean isIdentityToken()
-	{
-		return JWTTokenType.IDENTITY.equals(tokenType);
-	}
-
-	public boolean isAuthorizationToken()
-	{
-		return JWTTokenType.AUTHORIZATION.equals(tokenType);
-	}
-
 
 	@Override public String getTokenId()
 	{
@@ -150,40 +104,11 @@ public class JWTToken implements SecurityToken
 
 	@Override public String[] getRoles()
 	{
-		convertToAuthToken();
 		return roles;
 	}
 
 	@Override public String[] getEvents()
 	{
-		convertToAuthToken();
 		return events;
-	}
-
-	private void convertToAuthToken()
-	{
-		if (!JWTTokenType.AUTHORIZATION.equals(this.tokenType))
-		{
-			if (SecurityContextHolder.getContext().getSecurityToken().equals(this))
-			{
-				LoggingContextHolder
-						.getContextOptional()
-						.ifPresent(loggingContext -> loggingContext.addEvent("Converting to Auth Token"));
-
-				JWTToken token = tokenService.retrieveAuthorizationTokenForUserInContext();
-				this.tokenType = JWTTokenType.AUTHORIZATION;
-				this.appName = token.appName;
-				this.userId = token.userId;
-				this.username = token.username;
-				this.roles = token.roles;
-				this.events = token.events;
-				this.tokenId = token.tokenId;
-				this.rawTokenText = token.rawTokenText;
-				return;
-			}
-
-			throw new InternalException(
-					"Cannot retrieve Authorization Token for a different user than the user in context.");
-		}
 	}
 }

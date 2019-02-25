@@ -29,11 +29,9 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mikewerzen.zen.zenframework.exception.logic.InvalidAuthenticationException;
 import com.mikewerzen.zen.zenframework.exception.system.InternalException;
-import com.mikewerzen.zen.zenframework.logging.annotation.LogRuntime;
 import com.mikewerzen.zen.zenframework.security.provider.zen.jwt.client.ZenIAMServiceClient;
 import com.mikewerzen.zen.zenframework.security.provider.zen.jwt.client.container.Secret;
 import com.mikewerzen.zen.zenframework.security.provider.zen.jwt.token.JWTToken;
-import com.mikewerzen.zen.zenframework.security.provider.zen.jwt.token.JWTTokenType;
 import com.mikewerzen.zen.zenframework.validation.InternalValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,19 +58,6 @@ public class TokenService
 	private Algorithm previousAlgorithm;
 	private JWTVerifier previousVerifier;
 
-	public String createIdentityToken(String userId, String appName, String userName, ZonedDateTime expiresAt)
-	{
-		return JWT.create()
-				.withIssuer(jwtIssuer)
-				.withIssuedAt(java.util.Date.from(Instant.now()))
-				.withExpiresAt(java.util.Date.from(expiresAt.toInstant()))
-				.withClaim("type", JWTTokenType.IDENTITY.toString())
-				.withClaim("userId", userId)
-				.withClaim("appName", appName)
-				.withClaim("username", userName)
-				.sign(currentAlgorithm);
-	}
-
 	public String createAuthorizationToken(String userId, String appName, String userName, String[] userRoles,
 			String[] userEvents, ZonedDateTime expiresAt)
 	{
@@ -80,7 +65,6 @@ public class TokenService
 				.withIssuer(jwtIssuer)
 				.withIssuedAt(java.util.Date.from(Instant.now()))
 				.withExpiresAt(java.util.Date.from(expiresAt.toInstant()))
-				.withClaim("type", JWTTokenType.AUTHORIZATION.toString())
 				.withClaim("userId", userId)
 				.withClaim("appName", appName)
 				.withClaim("username", userName)
@@ -97,23 +81,14 @@ public class TokenService
 		String jwtId = decodedToken.getId();
 
 		String typeString = decodedToken.getClaim("type").asString();
-		JWTTokenType type = InternalValidationUtils.getInstance().parseEnumeration("TokenType", typeString, JWTTokenType.class);
 		String userId = decodedToken.getClaim("userId").asString();
 		String appName = decodedToken.getClaim("appName").asString();
 		String username = decodedToken.getClaim("username").asString();
 		String[] userRoles = decodedToken.getClaim("userRoles").asArray(String.class);
 		String[] userEvents = decodedToken.getClaim("userEvents").asArray(String.class);
 
-		if (type.equals(JWTTokenType.AUTHORIZATION))
-		{
 			return JWTToken.createAuthorizationToken(this, appName, userId, username, userRoles, userEvents, jwtId, token);
-		}
-		else if (type.equals(JWTTokenType.IDENTITY))
-		{
-			return JWTToken.createIdentityToken(this, appName, userId, username, jwtId, token);
-		}
 
-		throw new InternalException("Unsupported Token Type: " + type);
 	}
 
 	public void verifyToken(String token)
@@ -125,7 +100,6 @@ public class TokenService
 		catch (JWTVerificationException | NullPointerException currentVerifierException)
 		{
 			//Perhaps the token is old, try again with previous verifier.
-
 			try
 			{
 				previousVerifier.verify(token);
@@ -135,12 +109,6 @@ public class TokenService
 				throw new InvalidAuthenticationException("Could not verify JWT token", currentVerifierException);
 			}
 		}
-	}
-
-	@LogRuntime
-	public JWTToken retrieveAuthorizationTokenForUserInContext()
-	{
-		return decodeToken(iamServiceClient.retrieveAuthenticationTokenForUserInContext());
 	}
 
 	public void updateSecret(Secret secret)

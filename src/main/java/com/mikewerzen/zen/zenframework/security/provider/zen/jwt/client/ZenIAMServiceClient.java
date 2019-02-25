@@ -78,13 +78,4 @@ public class ZenIAMServiceClient
 		return Optional.empty();
 	}
 
-	public String retrieveAuthenticationTokenForUserInContext()
-	{
-		securityUtils.validateUserIsSignedIn();
-
-		Token authToken = client.get("/token/authorization", tokenEndpointUrl, Token.class);
-
-		return authToken.token;
-	}
-
 }
