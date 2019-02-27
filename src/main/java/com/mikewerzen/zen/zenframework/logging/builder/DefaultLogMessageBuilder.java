@@ -115,6 +115,11 @@ public class DefaultLogMessageBuilder implements LogMessageBuilder
 			addLoggingContextFields(LoggingContextHolder.getContextOptional(), logMessage);
 		}
 
+		if(SecurityContextHolder.getContextOptional().isPresent())
+		{
+			addSecurityContextFields(SecurityContextHolder.getContextOptional(), logMessage);
+		}
+
 		return gson.toJson(logMessage);
 	}
 
