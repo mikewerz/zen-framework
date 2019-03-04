@@ -63,7 +63,7 @@ public class TokenService
 	{
 		return JWT.create()
 				.withIssuer(jwtIssuer)
-				.withIssuedAt(java.util.Date.from(Instant.now()))
+				.withIssuedAt(java.util.Date.from(Instant.now().minusSeconds(15)))
 				.withExpiresAt(java.util.Date.from(expiresAt.toInstant()))
 				.withClaim("userId", userId)
 				.withClaim("appName", appName)

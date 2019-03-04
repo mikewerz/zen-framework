@@ -23,7 +23,11 @@
 
 package com.mikewerzen.zen.zenframework.util;
 
+import org.springframework.core.convert.converter.Converter;
+
+import javax.swing.text.DateFormatter;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
 public class TimeUtils
@@ -58,6 +62,30 @@ public class TimeUtils
 			hour += 12;
 
 		return getEasternTime().withYear(year).withMonth(month).withDayOfMonth(day).withHour(hour).withMinute(minutes);
+	}
+
+	public static ZonedDateTime updateDateWithTime(ZonedDateTime date, LocalTime time)
+	{
+		return date.withHour(time.getHour()).withMinute(time.getMinute()).withSecond(time.getSecond());
+	}
+
+	public static Converter<String, ZonedDateTime> getZonedDateTimeConverter()
+	{
+		return new Converter<String, ZonedDateTime>()
+		{
+			private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+			@Override public ZonedDateTime convert(String source)
+			{
+				if(source == null || source.isEmpty())
+				{
+					return null;
+				}
+
+				LocalDate date = LocalDate.parse(source, formatter);
+				return date.atStartOfDay(TimeUtils.getEasternTime().getZone());
+			}
+		};
 	}
 
 
