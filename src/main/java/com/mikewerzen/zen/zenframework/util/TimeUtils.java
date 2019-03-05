@@ -35,7 +35,12 @@ public class TimeUtils
 
 	public static ZonedDateTime getEasternTime()
 	{
-		return ZonedDateTime.of(LocalDateTime.now(), TimeZone.getTimeZone("EST").toZoneId());
+		return ZonedDateTime.of(LocalDateTime.now(), getEasternTimeZone());
+	}
+
+	public static ZoneId getEasternTimeZone()
+	{
+		return TimeZone.getTimeZone("EST").toZoneId();
 	}
 
 	public static ZonedDateTime getEasternTime(int hour, int minutes)
@@ -62,6 +67,16 @@ public class TimeUtils
 			hour += 12;
 
 		return getEasternTime().withYear(year).withMonth(month).withDayOfMonth(day).withHour(hour).withMinute(minutes);
+	}
+
+	public static ZonedDateTime getStartOfDayEastern()
+	{
+		return getEasternTime().toLocalDate().atStartOfDay(getEasternTimeZone());
+	}
+
+	public static ZonedDateTime getStartOfDayEastern(ZonedDateTime time)
+	{
+		return time.toLocalDate().atStartOfDay(getEasternTimeZone());
 	}
 
 	public static ZonedDateTime updateDateWithTime(ZonedDateTime date, LocalTime time)
